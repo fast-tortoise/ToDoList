@@ -24,9 +24,9 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-const items = [];
-const workItems = [];
-
+var items = [];
+var workItems = [];
+var completedTask = "";
 async function getCommonList(){
   
   const normalList = await NormalItem.find({});
@@ -34,6 +34,7 @@ async function getCommonList(){
     items.push(element.listItem)
   });
 }
+
 getCommonList();
 async function getWorkList(){
   
@@ -44,17 +45,18 @@ async function getWorkList(){
 }
 getWorkList();
 
+
 app.get("/", function(req, res) {
 
   const day = date.getDate();
-  
+
   res.render("list", {listTitle: day, newListItems: items});
 });
 
 app.post("/", function(req, res){
 
   const item = req.body.newItem;
-
+  
   console.log(req.body);
   if (req.body.list === "Work") {
 
@@ -71,6 +73,7 @@ app.post("/", function(req, res){
   }
 });
 
+
 app.get("/work", function(req,res){
   
   res.render("list", {listTitle: "Work", newListItems: workItems});
@@ -79,6 +82,40 @@ app.get("/work", function(req,res){
 app.get("/about", function(req, res){
   res.render("about");
 });
+
+app.post("/delete", function(req, res){
+  completedTask = req.body.checkbox
+  console.log(typeof completedTask)
+
+  if (workItems.includes(completedTask)){
+    const newWorkList = workItems.filter(function(item){
+      return item !== completedTask
+    })
+    workItems = newWorkList;
+    deleteOne();
+
+    res.redirect("/work" )
+  }
+  else{
+    const newList = items.filter(function(item){
+      return item !== completedTask
+    })
+    items = newList
+    deleteOneMain()
+    res.redirect("/")
+  }
+
+})
+
+async function deleteOne(){
+  var del= await WorkItem.deleteOne({ listItem: completedTask })
+  console.log(del)
+}
+
+async function deleteOneMain(){
+  var del= await NormalItem.deleteOne({ listItem: completedTask })
+  console.log(del)
+}
 
 app.listen(3000, function() {
   console.log("Server started on port 3000");

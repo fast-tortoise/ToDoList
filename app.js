@@ -70,7 +70,6 @@ app.get("/", function(req, res) {
 });
 
 async function postHanderler(item, list){
-  console.log("I'm    *****************************************  here") 
   const newItem = new NormalItem({ listItem: item });
   ListModel.findOne({listName: list}, function (err, listDoc){
     if(!err){
@@ -102,16 +101,39 @@ app.get("/about", function(req, res){
   res.render("about");
 });
 
+// app.post("/delete", function(req, res){
+//   completedTask = req.body.checkbox
+//   console.log(req.body)
+//     async function deleteOneMain(){
+//       var del= await NormalItem.deleteOne({ listItem: completedTask })
+//       console.log(del)
+//     }
+//     deleteOneMain()
+//     res.redirect("/")
+// })
+
 app.post("/delete", function(req, res){
-  completedTask = req.body.checkbox
-  console.log(typeof completedTask)
+  const deleteFrom = Object.keys(req.body)[0];
+  console.log("deleteFrom "+deleteFrom);
+  const deleteThis = req.body[deleteFrom];
+  console.log("deleteThis "+deleteThis);
+  async function deleteOne(){
+    await ListModel.findOneAndUpdate({listName: deleteFrom},{$pull: {listItems:{listItem: deleteThis} }}, 
+      function (err, listDoc) { }).clone();
+  }
+
+  if (deleteFrom == "ToDoList"){
     async function deleteOneMain(){
-      var del= await NormalItem.deleteOne({ listItem: completedTask })
-      console.log(del)
-    }
+        var del= await NormalItem.deleteOne({ listItem: deleteThis })
+        console.log(del)
+      }
     deleteOneMain()
     res.redirect("/")
-  // }
+  }
+  else{
+    deleteOne();
+    res.redirect("/"+deleteFrom);
+  }
 })
 
 app.listen(3000, function() {

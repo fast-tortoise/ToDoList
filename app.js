@@ -1,5 +1,4 @@
 //jshint esversion:6
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const date = require(__dirname + "/date.js");
@@ -24,59 +23,40 @@ app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(express.static("public"));
 
-var items = [];
-var workItems = [];
 var completedTask = "";
-async function getCommonList(){
-  
-  const normalList = await NormalItem.find({});
-  normalList.forEach(element => {
-    items.push(element.listItem)
-  });
-}
 
-getCommonList();
 async function getWorkList(){
-  
   const workList = await WorkItem.find({});
-  workList.forEach(element => {
-    workItems.push(element.listItem)
-  });
 }
 getWorkList();
 
+// app.get('/:newTodo', (req, res) => {
+//   variable = mongoose.model(variable, listSchema);
+//   res.render("list", {listTitle: req.params.newTodo, newListItems: normalList});
+// })
 
 app.get("/", function(req, res) {
-
-  const day = date.getDate();
-
-  res.render("list", {listTitle: day, newListItems: items});
+  async function getCommonList(){
+    var normalList = await NormalItem.find({});
+    res.render("list", {listTitle: 'ToDoList', newListItems: normalList});
+  }
+  getCommonList();
+  
 });
 
 app.post("/", function(req, res){
-
   const item = req.body.newItem;
-  
   console.log(req.body);
-  if (req.body.list === "Work") {
-
-    const newWork = new WorkItem({listItem:item})
-    newWork.save();
-    workItems.push(item);
-    res.redirect("/work");
-  } 
-  else {
+  // if (req.body.list === "Work") {
+  //   const newWork = new WorkItem({listItem:item})
+  //   newWork.save();
+  //   res.redirect("/work");
+  // } 
+  // else {
     const newItem = new NormalItem({listItem: item});
     newItem.save();
-    items.push(item);
     res.redirect("/");
-  }
-});
-
-
-app.get("/work", function(req,res){
-  
-  res.render("list", {listTitle: "Work", newListItems: workItems});
+  // }
 });
 
 app.get("/about", function(req, res){
@@ -86,25 +66,23 @@ app.get("/about", function(req, res){
 app.post("/delete", function(req, res){
   completedTask = req.body.checkbox
   console.log(typeof completedTask)
-
-  if (workItems.includes(completedTask)){
-    const newWorkList = workItems.filter(function(item){
-      return item !== completedTask
-    })
-    workItems = newWorkList;
-    deleteOne();
-
-    res.redirect("/work" )
-  }
-  else{
-    const newList = items.filter(function(item){
-      return item !== completedTask
-    })
-    items = newList
+  // if (workItems.includes(completedTask)){
+  //   const newWorkList = workItems.filter(function(item){
+  //     return item !== completedTask
+  //   })
+  //   workItems = newWorkList;
+  //   deleteOne();
+  //   res.redirect("/work" )
+  // }
+  
+  // else{
+    async function deleteOneMain(){
+      var del= await NormalItem.deleteOne({ listItem: completedTask })
+      console.log(del)
+    }
     deleteOneMain()
     res.redirect("/")
-  }
-
+  // }
 })
 
 async function deleteOne(){
@@ -112,11 +90,6 @@ async function deleteOne(){
   console.log(del)
 }
 
-async function deleteOneMain(){
-  var del= await NormalItem.deleteOne({ listItem: completedTask })
-  console.log(del)
-}
-
 app.listen(3000, function() {
   console.log("Server started on port 3000");
-});
+})
